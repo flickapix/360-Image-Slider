@@ -1,5 +1,7 @@
 # 360 Image Slider Standalone
 
+DEMO : http://isqueel.com/test/360/
+
 I stumbled upon Robert's http://www.netmagazine.com/tutorials/build-360-view-image-slider-javascript Slider, and thought it was a 
 genuinely great idea. Only problem being that it heavily required jquery, and a specific structure of initialization.
 
