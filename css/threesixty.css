@@ -101,6 +101,7 @@
 	text-shadow:0 0 5px #aaeeee;
 	font-family:arial;
 	font-size:18px;
+	text-align:center;
 }
 /*
 	Sets the style of the percentage <span> of the preloader by setting its dimensions and centering it horizontally and vertically 
