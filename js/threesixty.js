@@ -73,7 +73,9 @@
 			if( document.addEventListener )
 				container.removeEventListener( eventDown, eventDownFunc, false ),
 				container.removeEventListener( eventMove, eventMoveFunc, false ),
-				container.removeEventListener( eventUp, eventDownFunc, false );
+				container.removeEventListener( eventUp, eventDownFunc, false ),
+				container.removeEventListener( 'mousewheel', eventWheel, false ),
+				container.removeEventListener( 'DOMMouseScroll', eventWheel, false );
 			else
 				container.detachEvent( 'on' + eventDown, eventDownFunc ),
 				container.detachEvent( 'on' + eventMove, eventMoveFunc ),
@@ -142,7 +144,7 @@
 			 **/
 			updateloadedImages = function() {
 				stepCallback && stepCallback( ( loadedImages / len * 100 ) >> 0 );
-				++loadedImages === len && initialize();
+				++loadedImages === ( len - 1 ) && initialize();
 			},
 			
 			/**
@@ -163,7 +165,7 @@
 			},
 			/**
 			* (void) Creates a new setInterval and stores it in the "ticker"
-			* By default I set the FPS value to 45 which gives a nice and smooth rendering
+			* By default set the FPS value to 45 which gives a nice and smooth rendering
 			**/
 			refresh = this.refresh = function() {
 				if( ticker === 0 ) // If the ticker is not running already
@@ -244,6 +246,7 @@
 				return e.pageY;
 			},
 			// Event functions
+			/** Called on, mousedown/touchstart **/
 			eventDownFunc = function( e ) {
 				e.preventDefault ? e.preventDefault() : ( e.returnValue = false );
 				pointerStartPosX = getPageX( e );
@@ -256,6 +259,7 @@
 					
 				dragging = true;
 			},
+			/** Called on touchmove / mousemove **/
 			eventMoveFunc = function( e ) {
 				e.preventDefault ? e.preventDefault() : ( e.returnValue = false );
 				
@@ -276,6 +280,7 @@
 				else
 					trackPointer( e );
 			},
+			/** Called on mouseup/touchend **/
 			eventUpFunc = function( e ) {
 				e.preventDefault ? e.preventDefault() : ( e.returnValue = false );
 				dragging = false;
@@ -284,8 +289,25 @@
 				if( e.touches && e.touches.length < 2 )
 					origVal = scaleVal,
 					isPinch = false;
+			},
+			eventWheel = function( e ) {
+				var delta = 0;
+				if( e )
+					e.preventDefault();
+				else
+					return false;
+				if( e.wheelDelta )
+					delta = e.wheelDelta / 120; 
+				else if( e.detail )
+					delta = -e.detail / 3;
+
+				scaleVal += delta / 10;
+				scaleVal = scaleVal > max_zoom ? max_zoom : scaleVal < min_zoom ? min_zoom : scaleVal;
+				img_elStyle[ _transform ] = "scale(" + scaleVal + ")";
+		
+				return false;
 			};
-			
+		
 		// appending the img element to the user-specified container element
 		container.appendChild( img_el );
 		
@@ -310,7 +332,9 @@
 		if( document.addEventListener )
 			container.addEventListener( eventDown, eventDownFunc, false ),
 			container.addEventListener( eventMove, eventMoveFunc, false ),
-			container.addEventListener( eventUp, eventUpFunc, false );
+			container.addEventListener( eventUp, eventUpFunc, false ),
+			container.addEventListener( 'mousewheel', eventWheel, false ),
+			container.addEventListener( 'DOMMouseScroll', eventWheel, false );
 		else	// < IE9 fix
 			container.attachEvent( 'on' + eventDown, eventDownFunc ),
 			container.attachEvent( 'on' + eventMove, eventMoveFunc ),
@@ -342,12 +366,12 @@
 	findTransform = function( el ) {
 		if( 'webkitTransform' in el )
 			return 'webkitTransform';
-		else if( 'mozTransform' in el )
-			return 'mozTransform';
+		else if( 'MozTransform' in el )
+			return 'MozTransform';
 		else if( 'OTransform' in el )
 			return 'OTransform';
-		else if( 'MSTransform' in el )
-			return 'MSTransform';
+		else if( 'msTransform' in el )
+			return 'msTransform';
 		
 		return 'transform';
 	};
@@ -370,14 +394,14 @@
 	/**
 	 *	Wrapper around new _swipeSequence
 	 **/
-	parent.SwipeSequence = function( container, img_array, zoom_controls ) {
+	parent.SwipeSequence = function( container, img_array, controls ) {
 		 typeof container === "string"
 		 &&	( container = document.getElementById( container ) );
 		 
 		 var config;
 		 ( img_array.length > 0 ) && ( config = true );
 		 
-		return new _swipeSequence( container, img_array, zoom_controls, config );
+		return new _swipeSequence( container, img_array, controls, config );
 	};
 
 	//cleaning up
