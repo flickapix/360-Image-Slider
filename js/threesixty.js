@@ -95,18 +95,22 @@
 		var max_zoom = 2.2, // pinch zoom - max value (220%)
 			min_zoom = 0.8, // pinch zoom - min value (220%)
 			initCallback,	// called when the module is initialized
-			stepCallback;	// called once per loaded image
-		
+			stepCallback,	// called once per loaded image
+			downloadThreads = 4;	// how many simultaneous downloads?
+			
 		// overriding zoom values
 		if( controls )
-			max_zoom = controls.max,
-			min_zoom = controls.min,
-			initCallback = controls.init,
-			stepCallback = controls.step;
-			
+			max_zoom = controls.max ? controls.max : max_zoom,
+			min_zoom = controls.min ? controls.min : min_zoom,
+			initCallback = controls.init ? controls.init : null,
+			stepCallback = controls.step ? controls.step : null,
+			downloadThreads = controls.threads ? controls.threads : downloadThreads;
+
 		var q = this,
 			// We keep track of the loaded images by increasing every time a new image is added to the image slider
 			loadedImages = 0,
+			// number of available threads
+			availThreads = downloadThreads,
 			// keeping the count of images cached
 			len = this.length,
 			// the source of this element will change depending on the angle
@@ -143,10 +147,30 @@
 			 *	(void) runs once per loaded image
 			 **/
 			updateloadedImages = function() {
+				++loadedImages;
+				if( availThreads === -1 )
+					availThreads = 1;
+				else
+					++availThreads;
+
 				stepCallback && stepCallback( ( loadedImages / len * 100 ) >> 0 );
-				++loadedImages === ( len - 1 ) && initialize();
+				loadedImages === len ? initialize() : loadImage();
 			},
-			
+			/**
+			 *	(void) loads the image (in the background)
+			 */
+			loadImage = function() {
+				var img,
+					position;
+
+				while( availThreads-- && ( position = img_array[ loadedImages + downloadThreads - availThreads - 1 ] ) )
+				{
+					img = document.createElement('img');
+					img.onload = updateloadedImages;
+					img.src = position;
+				}
+				return false;
+			},
 			/**
 			 *	(void) Invoked when all images are loaded
 			 **/
@@ -307,12 +331,11 @@
 		
 				return false;
 			};
-		
+
 		// appending the img element to the user-specified container element
 		container.appendChild( img_el );
 		
-		while( len-- )
-			loadImage( img_array[ len ], updateloadedImages );
+		loadImage();
 		len = endFrame = this.length;
 		
 		//listeners - first a check to see if we are on a mobile device
@@ -350,16 +373,6 @@
 	},
 	// prototype cached
 	proto = _swipeSequence.prototype,
-	/**
-	 *	(void) loads the image (in the background)
-	 */
-	loadImage = function( path, callback ) {
-		var img = document.createElement('img');
-		img.src = path;
-		
-		img.onload = callback;
-		return false;
-	},
 	/**
 	 *	@return String The Transform property supported by the browser
 	 **/
