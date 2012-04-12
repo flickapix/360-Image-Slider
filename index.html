@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0" />
+	<title>360</title>
+	<link rel="stylesheet" href="css/reset.css" media="screen" type="text/css" />
+	<link rel="stylesheet" href="css/threesixty.css" media="screen" type="text/css" />
+</head>
+<body>
+	<div id="threesixty">
+		<div id="spinner">0%</div>
+
+		<!-- the inline style is not really needed -->
+		<div id="threesixty_images" style="position:relative;height:100%;">
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="js/threesixty.js" ></script>
+	<script type="text/javascript">
+		if( document.addEventListener )
+			document.addEventListener('touchmove', function(e){e.preventDefault();}, false);
+		
+		var loaderUpdate = function( percent ) {
+				document.getElementById('spinner').innerHTML = percent + "%";
+			},
+			loaderOff = function() {
+				document.getElementById('spinner').style.display = "none";
+			};
+		
+		//way 1 - array of paths
+		//SwipeSequence( 'threesixty_images', ['picture.jpg', 'test.png' ] );
+
+		//way 2 - automized object way
+		SwipeSequence( 'threesixty_images', 
+			{ frames : 180, path : "img/threesixty_", ext : ".jpg" },
+			{ max : 2.5, min : 0.6, step : loaderUpdate, init : loaderOff });
+	</script>
+
+</body>
+</html>
